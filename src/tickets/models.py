@@ -1,0 +1,53 @@
+from typing import List, Optional
+from pydantic import BaseModel, Field
+from datetime import datetime, timezone
+from utils.constants import Priority, TicketStatus
+
+class ActivityLog(BaseModel):
+    actor_id: str      
+    actor_name: str    
+    action: str        
+    details: str       
+    timestamp: datetime = Field(default_factory=datetime.now(timezone.utc))
+
+# collection is "tickets"
+class TicketDB(BaseModel):
+    id: str
+    title: str
+    description: str
+    images: List[str] = [] 
+    priority: Priority = Priority.LOW
+    status: TicketStatus = TicketStatus.OPEN
+    
+    
+    created_by: str        
+    property_id: str       
+    assigned_to: Optional[str] = None 
+    
+    
+    history: List[ActivityLog] = []
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+  #  Below response model, will return to frontend in this format 
+
+
+
+class TicketCreateRequest(BaseModel):
+    title: str
+    description: str
+    priority: Priority
+    # Images are handled via a separate upload endpoint usually, 
+    # but can be passed here if already uploaded.
+    image_urls: List[str] = [] 
+
+# 2. Manager assigning a technician
+class AssignTicketRequest(BaseModel):
+    technician_id: str
+    comment: str
+
+class UpdateTicketStatusRequest(BaseModel):
+    status: TicketStatus
+    comment: Optional[str] = None 
