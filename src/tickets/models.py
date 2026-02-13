@@ -2,7 +2,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from src.utils.constants import Priority, TicketStatus
-
+from fastapi import UploadFile, File
 class ActivityLog(BaseModel):
     actor_id: str      
     actor_name: str    
@@ -31,18 +31,15 @@ class TicketDB(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-  #  Below response model, will return to frontend in this format 
-
-
 
 class TicketCreateRequest(BaseModel):
     title: str
     description: str
     priority: Priority
-
-    # Images are handled via a separate upload endpoint usually, 
-    # but can be passed here if already uploaded.
-    image_urls: List[str] = [] 
+    # Images currently is being uploaded and stored in local host, production requires s3 or firebase storage
+    image_urls: List[str] = []
+  
+    
 
 # 2. Manager assigning a technician
 class AssignTicketRequest(BaseModel):

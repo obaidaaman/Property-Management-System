@@ -4,6 +4,10 @@ from typing import List
 from src.tickets.controller import create_ticket, update_ticket, get_all_tickets_by_id
 from .models import TicketCreateRequest, TicketResponseModel, UpdateTicketStatusRequest
 from src.utils.db import get_db
+from fastapi import File, UploadFile, Form
+import shutil
+import os
+
 user_route = APIRouter(prefix="/ticket")
 
 
@@ -32,3 +36,5 @@ def update_user_ticket(
 @user_route.get("/get-tickets", status_code=status.HTTP_200_OK, response_model=List[TicketResponseModel])
 def list_ticket_by_current_user(current_user = Depends(is_authenticated), db = Depends(get_db)):
     return get_all_tickets_by_id(user_id=current_user.id, db=db)
+
+
