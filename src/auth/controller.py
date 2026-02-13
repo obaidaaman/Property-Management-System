@@ -3,6 +3,7 @@ from firebase_admin import firestore
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, status, Request, Depends
 from src.utils.db import get_db
+from google.cloud import firestore as ff
 from pwdlib import PasswordHash
 from dotenv import load_dotenv
 import jwt
@@ -29,7 +30,9 @@ def create_auth(auth:UserDB, db : firestore.client, allow_manager_registration :
     # Then continue to create the user in the database
 
 
-
+    if auth.role == Role.TENANT:
+        if not auth.block_name or not auth.unit_number:
+            raise HTTPException(400, "Tenants must provide Block and Unit Number")
     user_collection = db.collection("users")
 
     existing_user = (
@@ -58,9 +61,11 @@ def create_auth(auth:UserDB, db : firestore.client, allow_manager_registration :
         "password" : hashed_password,
         "email" : auth.email,
         "phone_number": auth.phone_number,
-        "created_at": auth.created_at,
+        "created_at": ff.SERVER_TIMESTAMP,
         "is_active" : True,
-        "role" : auth.role
+        "role" : auth.role,
+        "block_name" : auth.block_name,
+        "unit_number" : auth.unit_number
         
     })
     return UserResponse(
@@ -100,8 +105,8 @@ def login_user(auth : LoginModel, db : firestore.client):
         full_name= user_data["full_name"],
         id= user_doc[0].id,
         role=user_data["role"],
-        property_id=user_data.get("property_id", ""),
-        access_token=token
+        access_token=token,
+        
 
     )
 
@@ -134,6 +139,6 @@ def is_authenticated(request: Request, db = Depends(get_db)):
     user = db.collection("users").document(id).get()
     if user.exists:
         user_data = user.to_dict()
-        return UserResponse(id=user.id, email=user_data["email"], full_name=user_data["full_name"], role=user_data.get("role", None), property_id=user_data.get("property_id", None))
+        return UserResponse(id=user.id, email=user_data["email"], full_name=user_data["full_name"], role=user_data.get("role", None), unit_number=user_data.get("unit_number"), block_number=user_data.get("block_number"))
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not Found")

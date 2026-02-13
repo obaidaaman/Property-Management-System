@@ -1,14 +1,14 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
-from utils.constants import Priority, TicketStatus
+from src.utils.constants import Priority, TicketStatus
 
 class ActivityLog(BaseModel):
     actor_id: str      
     actor_name: str    
     action: str        
     details: str       
-    timestamp: datetime = Field(default_factory=datetime.now(timezone.utc))
+    timestamp : datetime
 
 # collection is "tickets"
 class TicketDB(BaseModel):
@@ -21,7 +21,7 @@ class TicketDB(BaseModel):
     
     
     created_by: str        
-    property_id: str       
+    # property_id: str       
     assigned_to: Optional[str] = None 
     
     
@@ -39,6 +39,7 @@ class TicketCreateRequest(BaseModel):
     title: str
     description: str
     priority: Priority
+
     # Images are handled via a separate upload endpoint usually, 
     # but can be passed here if already uploaded.
     image_urls: List[str] = [] 
@@ -49,5 +50,19 @@ class AssignTicketRequest(BaseModel):
     comment: str
 
 class UpdateTicketStatusRequest(BaseModel):
-    status: TicketStatus
-    comment: Optional[str] = None 
+    title: Optional[str] = None
+    description: Optional[str] = None
+    priority: Optional[Priority] = None
+    image_urls: Optional[List[str]] = None
+    status: Optional[TicketStatus] = None
+    comment: Optional[str] = None
+    assigned_to: str
+
+
+class TicketResponseModel(BaseModel):
+    id : str
+    title  : str
+    description: str
+    priority: Optional[str] = None
+    images : List[str]
+

@@ -8,7 +8,11 @@ auth_router = APIRouter(prefix="/auth")
 
 @auth_router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def signup_user(user: UserDB, db = Depends(get_db)):
-    return create_auth(user, db)
+    return create_auth(user, db,)
+
+@auth_router.post("/register-technician", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def signup_technician(user: UserDB, db = Depends(get_db)):
+    return create_auth(user, db,allow_manager_registration=True)
 
 @auth_router.post("/login", response_model=UserResponse, status_code=status.HTTP_200_OK)
 def login_user(user: LoginModel, db = Depends(get_db)):
