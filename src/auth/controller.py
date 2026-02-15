@@ -139,6 +139,6 @@ def is_authenticated(request: Request, db = Depends(get_db)):
     user = db.collection("users").document(id).get()
     if user.exists:
         user_data = user.to_dict()
-        return UserResponse(id=user.id, email=user_data["email"], full_name=user_data["full_name"], role=user_data.get("role", None), unit_number=user_data.get("unit_number"), block_number=user_data.get("block_number"))
+        return UserResponse(id=user.id, email=user_data["email"], full_name=user_data["full_name"], role=user_data.get("role", None), unit_number=user_data.get("unit_number",""), block_number=user_data.get("block_number", ""))
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not Found")

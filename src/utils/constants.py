@@ -20,10 +20,25 @@ class Priority(str, Enum):
 
 
 # collection --> Properties
-class PropertyDB(BaseModel):
-    id: str
-    name: str             
-    address: str
-    manager_id: str        
-    unit_count: int        
-    created_at: datetime 
+# class PropertyDB(BaseModel):
+#     id: str
+#     name: str             
+#     address: str
+#     manager_id: str        
+#     unit_count: int        
+#     created_at: datetime 
+
+from src.utils.constants import Role
+
+ALLOWED_TRANSITIONS = {
+    "Open": ["Assigned"],
+    "Assigned": ["In Progress"],
+    "In Progress": ["Done"],
+    "Done": [],
+}
+
+STATUS_ROLE_MAP = {
+    "Assigned": Role.MANAGER,
+    "In Progress": Role.TECHNICIAN,
+    "Done": Role.TECHNICIAN,
+}

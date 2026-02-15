@@ -18,10 +18,12 @@ class UserDB(BaseModel):
     block_name: Optional[str] = None
     unit_number: Optional[str] = None          
     phone_number: str
-    property_id: Optional[str] = None 
+    # property_id: Optional[str] = None 
     is_active: bool = True
     
-
+class StaffCreateRequest(UserDB):
+    
+    pass
 
 class UserResponse(BaseModel):
     id: str

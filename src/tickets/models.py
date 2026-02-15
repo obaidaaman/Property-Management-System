@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from src.utils.constants import Priority, TicketStatus
@@ -27,16 +27,15 @@ class TicketDB(BaseModel):
     
     history: List[ActivityLog] = []
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
+    created_at: datetime
+    updated_at: datetime
 
 
 class TicketCreateRequest(BaseModel):
     title: str
     description: str
     priority: Priority
-    # Images currently is being uploaded and stored in local host, production requires s3 or firebase storage
+    # Firebase Storage used for image store, on my backend project DB
     image_urls: List[str] = []
   
     
@@ -50,10 +49,9 @@ class UpdateTicketStatusRequest(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     priority: Optional[Priority] = None
-    image_urls: Optional[List[str]] = None
     status: Optional[TicketStatus] = None
     comment: Optional[str] = None
-    assigned_to: str
+    assigned_to: Optional[str] = None
 
 
 class TicketResponseModel(BaseModel):
@@ -61,5 +59,22 @@ class TicketResponseModel(BaseModel):
     title  : str
     description: str
     priority: Optional[str] = None
-    images : List[str]
+    images : List[str] = None
+    status : Optional[str] = None
+    
 
+
+class AssignTicketModel(BaseModel):
+    ticket_id: str
+    technician_id: str
+    comment: Optional[str] = None
+
+
+class ActivityLogModel(BaseModel):
+    id: str 
+    ticket_id: str 
+    user_id: str
+    user_role: str 
+    type: Literal["comment", "status_change", "assignment", "creation"] 
+    content: str 
+    created_at: datetime

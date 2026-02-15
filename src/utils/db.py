@@ -10,7 +10,9 @@ cred = credentials.Certificate(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 
 
 
-firebase_admin.initialize_app(cred)
+firebase_admin.initialize_app(cred, {
+    'storageBucket' : 'rememberbuddy-d8f98.firebasestorage.app'
+})
 
 db = firestore.client()
 
