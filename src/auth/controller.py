@@ -29,7 +29,11 @@ def create_auth(auth:UserDB, db : firestore.client, allow_manager_registration :
     # email validation
     # Then continue to create the user in the database
 
-
+    if auth.role in [Role.MANAGER, Role.TECHNICIAN] and not allow_manager_registration:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot self-register as manager or technician. Contact administrator."
+        )
     if auth.role == Role.TENANT:
         if not auth.block_name or not auth.unit_number:
             raise HTTPException(400, "Tenants must provide Block and Unit Number")
@@ -40,11 +44,7 @@ def create_auth(auth:UserDB, db : firestore.client, allow_manager_registration :
         .limit(1)
         .stream()
     )
-    if auth.role in [Role.MANAGER, Role.TECHNICIAN] and not allow_manager_registration:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot self-register as manager or technician. Contact administrator."
-        )
+    
     if any(existing_user):
         raise HTTPException(400, detail="Phone number already exists")
     else:

@@ -7,10 +7,10 @@ class Role(str, Enum):
     TECHNICIAN = "technician"
 
 class TicketStatus(str, Enum):
-    OPEN = "open"           
-    ASSIGNED = "assigned"   
-    IN_PROGRESS = "in_progress" 
-    DONE = "done"           
+    OPEN = "OPEN"           
+    ASSIGNED = "ASSIGNED"   
+    IN_PROGRESS = "IN_PROGRESS" 
+    DONE = "DONE"           
 
 class Priority(str, Enum):
     LOW = "low"
@@ -31,14 +31,36 @@ class Priority(str, Enum):
 from src.utils.constants import Role
 
 ALLOWED_TRANSITIONS = {
-    "Open": ["Assigned"],
-    "Assigned": ["In Progress"],
-    "In Progress": ["Done"],
-    "Done": [],
+    "OPEN": ["ASSIGNED"],
+    "ASSIGNED": ["IN_PROGRESS"],
+    "IN_PROGRESS": ["DONE"],
+    "DONE": [],
 }
-
 STATUS_ROLE_MAP = {
     "Assigned": Role.MANAGER,
     "In Progress": Role.TECHNICIAN,
     "Done": Role.TECHNICIAN,
 }
+
+
+TASK_ASSIGNED= """
+        Hi {name},
+        You have been assigned with a new task,
+        Description : {task_description}
+        Tenant name : {tenant_name}
+        Phone number : {phone_number}
+        Block Number : {block_name}
+        Unit Number : {unit_name}
+
+        Please report to the assigned destination.
+"""
+
+TECHNICIAN_ASSIGNED= """
+        Hi {name},
+        A Technician has been assigned on your {ticket_title} ticket,
+        Technician Name : {technician_name}
+        Phone Number : {phone_number}
+        
+
+        The assigned official will report at your destination soon.
+"""

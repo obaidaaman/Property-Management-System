@@ -1,9 +1,10 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from google.cloud import firestore as ff
 from firebase_admin import firestore
 from typing import Optional
-from src.utils.constants import Role, TicketStatus, ALLOWED_TRANSITIONS, STATUS_ROLE_MAP
+from src.utils.constants import Role, TicketStatus, ALLOWED_TRANSITIONS, STATUS_ROLE_MAP, TECHNICIAN_ASSIGNED, TASK_ASSIGNED
 from .models import TicketCreateRequest, TicketResponseModel, ActivityLogModel
+from src.utils.email_sender import send_email
 
 
 def validate_status_transition(current_status, new_status, user_role):
@@ -67,6 +68,9 @@ def update_ticket(ticket_id: str, update_data: dict, db: firestore.Client, curre
 
     if not (is_owner or is_manager or is_technician):
         raise HTTPException(status_code=403, detail="Not authorized")
+    if "assigned_to" in update_data:
+        if not is_manager:
+            raise HTTPException(403, "Only manager can assign tickets")
 
     new_status = update_data.get("status")
     current_status = existing_data.get("status")
@@ -99,6 +103,7 @@ def update_ticket(ticket_id: str, update_data: dict, db: firestore.Client, curre
         })
 
     if new_status and new_status != existing_data.get("status"):
+        
         log_ref = ticket_ref.collection("activity_logs").document()
         batch.set(log_ref, {
             "type": "status_change",
@@ -175,7 +180,7 @@ def get_all_tickets(
 
     return tickets_list
 
-def assignTicket(ticket_id: str, technician_id: str, db: firestore.Client, role: str, current_user, comment: str):
+def assignTicket(ticket_id: str, technician_id: str, db: firestore.Client, role: str, current_user, comment: str, backgroundTask: BackgroundTasks):
     if current_user.role != Role.MANAGER:
         raise HTTPException(status_code=403, detail="Not authorized to assign tickets")
 
@@ -223,14 +228,18 @@ def assignTicket(ticket_id: str, technician_id: str, db: firestore.Client, role:
         })
 
     batch.commit()
-
-    existing_data = ticket_snapshot.to_dict()
+    
+    
+    technician_details, user_details = get_technician_and_user_detail(technician_id,ticket_data.get("user_id"),db)
+    
+    backgroundTask.add_task(send_email,user_details.get("email"),"Technician Assigned", TECHNICIAN_ASSIGNED.format(name=user_details.get("full_name"),ticket_title=ticket_data.get("title"),technician_name=technician_details.get("full_name"),phone_number=technician_details.get("phone_number")) )
+    backgroundTask.add_task(send_email,technician_details.get("email"),"New Task Assigned", TASK_ASSIGNED.format(name=technician_details.get("full_name"),task_description=ticket_data.get("description"),tenant_name=user_details.get("full_name"),phone_number=user_details.get("phone_number"),block_name=user_details.get("block_name"),unit_name=user_details.get("unit_number")) )
 
     return TicketResponseModel(
         id=ticket_ref.id,
-        title=existing_data.get("title"),
-        description=existing_data.get("description"),
-        images=existing_data.get("images", []),
+        title=ticket_data.get("title"),
+        description=ticket_data.get("description"),
+        images=ticket_data.get("images", []),
         status=TicketStatus.ASSIGNED
     )
 
@@ -260,3 +269,24 @@ def get_ticket_activity(ticket_id: str, db: firestore.Client):
         )
 
     return activity_list
+
+
+
+def get_technician_and_user_detail(
+    technician_id: str,
+    user_id: str,
+    db
+) -> tuple:
+    technician_doc = db.collection("users").document(technician_id).get()
+    user_doc = db.collection("users").document(user_id).get()
+
+    if not technician_doc.exists:
+        raise Exception("Technician not found")
+
+    if not user_doc.exists:
+        raise Exception("Tenant not found")
+
+    technician_data = technician_doc.to_dict()
+    user_data = user_doc.to_dict()
+
+    return technician_data, user_data
