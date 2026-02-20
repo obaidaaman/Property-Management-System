@@ -1,6 +1,6 @@
 # Property Maintenance Management System
 
-A mobile-first property maintenance management system that allows tenants to report issues, managers to assign technicians, and technicians to resolve maintenance tasks efficiently.
+A property maintenance management system that allows tenants to report issues, managers to assign technicians, and technicians to resolve maintenance tasks efficiently.
 
 This project demonstrates backend architecture, workflow design, role-based access control, and Firestore-based ticket lifecycle management.
 
@@ -246,3 +246,4 @@ The goal is clarity and correctness rather than UI complexity.
 ## Author
 
 Aman
+
